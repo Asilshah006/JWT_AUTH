@@ -1,7 +1,9 @@
-const UserDB = {
-    Users : require('../model/user.json'),
-    setUsers : function(data) {this.Users =data }
-}
+// const UserDB = {
+//     Users : require('../model/user.json'),
+//     setUsers : function(data) {this.Users =data }
+// }
+
+const Users = require('../model/Users')
 
 const bcypt = require('bcrypt')
 const fspromises = require('fs').promises
@@ -14,23 +16,24 @@ const handleRegistration = async (req,res)=>{
         return res.status(400).json({"message" : "Username and Password required"})
     }
 
-    const duplicate = UserDB.Users.find(person => person.username === user)
+    const duplicate = await Users.findOne({username : user})
 
     if(duplicate){
-        return res.status(409).json({"message" : "Username already taken"})
+        return res.sendStatus(409).json({"message" : "Username already taken"})
     }
 
    try {
     const hashpwd = await bcypt.hash(pwd , 10)
 
-    const newUser = {
-        username : user,
-        roles : {"User" : 2004},
+    const result = await Users.create ({
+        username: user,
         password : hashpwd
-    }
+    })
 
-    UserDB.setUsers([...UserDB.Users , newUser])
-   await fspromises.writeFile(path.join(__dirname , ".." , "model" , "user.json") , JSON.stringify(UserDB.Users))
+//     UserDB.setUsers([...UserDB.Users , newUser])
+//    await fspromises.writeFile(path.join(__dirname , ".." , "model" , "user.json") , JSON.stringify(UserDB.Users))
+
+    console.log(result);
 
    res.json({"message" : `New User ${user} created`})
    } catch (error) {

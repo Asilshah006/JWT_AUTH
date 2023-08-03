@@ -1,7 +1,9 @@
-const UserDB = {
-    Users : require('../model/user.json'),
-    setUsers : function(data) {this.Users =data }
-}
+// const UserDB = {
+//     Users : require('../model/user.json'),
+//     setUsers : function(data) {this.Users =data }
+// }
+
+const Users = require('../model/Users')
 
 const bcrypt = require('bcrypt')
 const fspromises = require('fs').promises
@@ -16,7 +18,7 @@ const handleLogin = async (req,res)=>{
         return res.status(400).json({"message" : "Username and Password required"})
     }
 
-    const foundUser = UserDB.Users.find(person => person.username === user)
+    const foundUser = await Users.findOne({username : user})
 
     if(!foundUser){
         return res.status(401).json({"message" : "No user Found"})
@@ -28,8 +30,7 @@ const handleLogin = async (req,res)=>{
         const match = await bcrypt.compare(pwd , foundUser.password)
 
         if(match){
-            const AccessToken = jwt.sign(
-                    
+            const AccessToken = jwt.sign(    
                 { 
                     "UserInfo":{
                         "username" : foundUser.username,
@@ -45,12 +46,15 @@ const handleLogin = async (req,res)=>{
                     {expiresIn : '1d'}
                 )
 
-           const otherUsers = UserDB.Users.filter(person => person.username !== foundUser.username);
-           const currentUser = {...foundUser , RefreshToken}
-           UserDB.setUsers([...otherUsers , currentUser])
+                foundUser.refreshToken =  RefreshToken
+                const result = await foundUser.save();
+                console.log(result);
+        //    const otherUsers = UserDB.Users.filter(person => person.username !== foundUser.username);
+        //    const currentUser = {...foundUser , RefreshToken}
+        //    UserDB.setUsers([...otherUsers , currentUser])
 
            
-           await fspromises.writeFile(path.join(__dirname, ".." , "model" , "user.json"),JSON.stringify(UserDB.Users))
+        //    await fspromises.writeFile(path.join(__dirname, ".." , "model" , "user.json"),JSON.stringify(UserDB.Users))
            
            res.cookie('jwt' , RefreshToken , {httpOnly :true , maxAge : 24 * 60 * 60 * 1000 });
            res.status(200).json({AccessToken})

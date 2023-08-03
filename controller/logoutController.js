@@ -1,7 +1,9 @@
-const UserDB = {
-    Users : require('../model/user.json'),
-    setUsers : function(data) {this.Users =data }
-}
+// const UserDB = {
+//     Users : require('../model/user.json'),
+//     setUsers : function(data) {this.Users =data }
+// }
+
+const Users = require('../model/Users')
 
 const bcrypt = require('bcrypt')
 const fspromises = require('fs').promises
@@ -17,7 +19,7 @@ const handleLogout = async (req,res)=>{
 
     const refreshToken = cookie.jwt
 
-    const foundUser = UserDB.Users.find(person => person.RefreshToken === refreshToken)
+    const foundUser = await Users.findOne({refreshToken : refreshToken})
     console.log(foundUser);
 
     if(!foundUser){
@@ -25,11 +27,14 @@ const handleLogout = async (req,res)=>{
         return res.sendStatus(204)
     }
 
-    const otherUsers = UserDB.Users.filter(person => person.RefreshToken !== foundUser.RefreshToken)
-    const currentUser = {...foundUser , RefreshToken : ''}
-    UserDB.setUsers([...otherUsers , currentUser])
+    foundUser.refreshToken = ''
+    const result = await foundUser.save();
+    console.log(result);
+    // const otherUsers = UserDB.Users.filter(person => person.RefreshToken !== foundUser.RefreshToken)
+    // const currentUser = {...foundUser , RefreshToken : ''}
+    // UserDB.setUsers([...otherUsers , currentUser])
 
-    await fspromises.writeFile(path.join(__dirname,'..' , 'model' , 'user.json'), JSON.stringify(UserDB.Users))
+    // await fspromises.writeFile(path.join(__dirname,'..' , 'model' , 'user.json'), JSON.stringify(UserDB.Users))
 
     res.clearCookie('jwt' , {httpOnly : true})
     res.sendStatus(204)

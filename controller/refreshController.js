@@ -1,7 +1,9 @@
-const UserDB = {
-    Users : require('../model/user.json'),
-    setUsers : function(data) {this.Users =data }
-}
+// const UserDB = {
+//     Users : require('../model/user.json'),
+//     setUsers : function(data) {this.Users =data }
+// }
+
+const Users = require('../model/Users');
 
 const bcrypt = require('bcrypt')
 const fspromises = require('fs').promises
@@ -17,7 +19,7 @@ const handleRefreshToken = async (req,res)=>{
 
     const refreshToken = cookie.jwt
 
-    const foundUser = UserDB.Users.find(person => person.RefreshToken === refreshToken)
+    const foundUser = await Users.findOne({refreshToken : refreshToken})
 
     if(!foundUser){
         return res.sendStatus(403)

@@ -6,6 +6,11 @@ const corsOption = require('./config/corsOption')
 const verifyJWT = require('./middleware/verifyJWT')
 const cookieParser = require('cookie-parser')
 const PORT = 3500
+const connectDB = require('./config/dbConn')
+const { default: mongoose } = require('mongoose')
+
+
+connectDB()
 
 app.use(Cors(corsOption))
 
@@ -26,6 +31,9 @@ app.use(verifyJWT)
 app.use('/employees', require('./routes/api/employee'))
 
 
-app.listen(PORT , ()=>{
-    console.log(`server running on port : ${PORT}`);
+mongoose.connection.once("open", ()=>{
+    console.log("connected to mongodb");
+    app.listen(PORT , ()=>{
+        console.log(`server running on port : ${PORT}`);
+    })
 })
